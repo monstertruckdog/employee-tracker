@@ -14,7 +14,6 @@ const connection = mysql.createConnection({
 connection.connect((err) => {
   if (err) throw err;
   console.log(`Connection was established\nApplication is running`);
-  //runSearch();
   actionSelect();
 });
 
@@ -74,27 +73,25 @@ const actionSelect = () => {
 const addNewDept = () => {
   inquirer
     .prompt({
-      name: 'artist',
+      name: 'deptName',
       type: 'input',
-      message: 'What artist would you like to search for?',
+      message: 'Name of department',
     })
     .then((answer) => {
-      const query = 'SELECT position, song, year FROM top5000 WHERE ?';
-      connection.query(query, { artist: answer.artist }, (err, res) => {
-        res.forEach(({ position, song, year }) => {
-          console.log(
-            `Position: ${position} || Song: ${song} || Year: ${year}`
-          );
-        });
-        runSearch();
-      });
-    });
+      const query = "INSERT INTO department VALUES(default, '?')";
+      connection.query(query, { name: answer.deptName }, (err, res) => {
+        //console.log(`--> RESPONSE:  ${answer.deptName}`)
+        console.log(''); // to avoid display issue with Inquirer insert of text "Answer:""
+        console.table(res);
+        actionSelect();
+      })
+    })
 };
 
 const viewEmployees = () => {
   const query = 'SELECT * FROM employee;';
   connection.query(query, (err, res) => {
-    console.log(''); // to avoid display issue with Inquirer insert of text "Answer:""
+    console.log('');
     console.table(res);
     actionSelect();
   })
