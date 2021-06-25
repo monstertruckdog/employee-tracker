@@ -17,6 +17,9 @@ connection.connect((err) => {
   actionSelect();
 });
 
+// ERRORS
+const errDuplicate = new Error('A duplicate has occurred');
+
 const actionSelect = () => {
   inquirer
     .prompt({
@@ -30,7 +33,8 @@ const actionSelect = () => {
         'View   | All Departments',
         'View   | All Roles',
         'View   | All Employees',
-        'Update | Employee Roles'
+        'Update | Employee Roles',
+        'Exit'
       ],
     })
     .then((answer) => {
@@ -63,6 +67,11 @@ const actionSelect = () => {
           songAndAlbumSearch();
           break;
 
+        case 'Exit':
+          //console.log('Goodbye!');
+          exit();
+          break;
+
         default:
           console.log(`Invalid action: ${answer.action}`);
           break;
@@ -78,13 +87,29 @@ const addNewDept = () => {
       message: 'Name of department',
     })
     .then((answer) => {
-      const query = "INSERT INTO department VALUES(default, '?')";
-      connection.query(query, { name: answer.deptName }, (err, res) => {
-        //console.log(`--> RESPONSE:  ${answer.deptName}`)
-        console.log(''); // to avoid display issue with Inquirer insert of text "Answer:""
+      // CHECK FOR DUPLICATES
+      const queryCheckExist = "SELECT name FROM department WHERE UPPER(name) = ?"
+      connection.query(queryCheckExist, [answer.deptName.toUpperCase()], (err, res) => {
+        if (err) throw err;
+        if (res.length > 0 && (res[0].name.toUpperCase() === answer.deptName.toUpperCase())) {
+          console.log(`Department name "${answer.deptName}" already exists.  Please try again`)
+          //process.exit(1);
+          exit();
+        }
+      });
+      // INSERTION
+      const queryInsert = "INSERT INTO department VALUES(default, ?);";
+      connection.query(queryInsert, [answer.deptName], (err, res) => {
+        if (err) throw err;
+        console.log(`\nNew DEPARTMENT created successfully!\n`)
+      });
+      // DISPLAY NEW ENTRY IN TABLE
+      const querySelectAll = "SELECT id AS 'DEPT ID', name AS 'DEPT NAME' FROM department ORDER BY id DESC LIMIT 1"
+      connection.query(querySelectAll, (err, res) => {
+        if (err) throw err;
         console.table(res);
         actionSelect();
-      })
+      });
     })
 };
 
@@ -95,4 +120,9 @@ const viewEmployees = () => {
     console.table(res);
     actionSelect();
   })
+};
+
+const exit = () => {
+  console.log(`\n\nExiting application\n`)
+  process.exit();
 };
