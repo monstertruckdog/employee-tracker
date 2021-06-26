@@ -28,14 +28,14 @@ const actionSelect = () => {
       type: 'rawlist',
       message: 'What would you like to do?',
       choices: [
-        'Add    | New Department',
-        'Add    | New Role',
+        'Add    | New Department', // Done
+        'Add    | New Role', // Done
         'Add    | New Employee',
-        'View   | All Departments',
+        'View   | All Departments', // Done
         'View   | All Roles',
         'View   | All Employees',
         'Update | Employee Roles',
-        'Exit'
+        'Exit' // Done
       ],
     })
     .then((answer) => {
@@ -69,7 +69,6 @@ const actionSelect = () => {
           break;
 
         case 'Exit':
-          //console.log('Goodbye!');
           exit();
           break;
 
@@ -88,13 +87,12 @@ const addNewDept = () => {
       message: 'Name of new department',
     })
     .then((answer) => {
-      // CHECK FOR DUPLICATES
+      // CHECK FOR DUPLICATES - department.name
       const queryCheckExist = "SELECT name FROM department WHERE UPPER(name) = ?"
       connection.query(queryCheckExist, [answer.deptName.toUpperCase()], (err, res) => {
         if (err) throw err;
         if (res.length > 0 && (res[0].name.toUpperCase() === answer.deptName.toUpperCase())) {
           console.log(`Department name "${answer.deptName}" already exists.  Please try again`)
-          //process.exit(1);
           exit();
         }
       });
@@ -150,14 +148,13 @@ const addNewRole = () => {
         }
       ])
       .then((answer) => {
-      // CHECK FOR DUPLICATES
+      // CHECK FOR DUPLICATES - role.title
       console.log(`--> Salary value is valid ('true') or invalid ('false'):  ${/\d{0,10}\.\d{2}/g.test(answer.roleSalary)}`);
       const queryCheckExist = "SELECT title FROM role WHERE UPPER(title) = ?"
       connection.query(queryCheckExist, [answer.roleName.toUpperCase()], (err, res) => {
         if (err) throw err;
         if (res.length > 0 && (res[0].title.toUpperCase() === answer.roleName.toUpperCase())) {
           console.log(`Role title "${answer.roleName}" already exists.  Please try again`)
-          //process.exit(1);
           exit();
         }
       });
@@ -167,39 +164,7 @@ const addNewRole = () => {
       console.log(`--> INPUT FROM USER - department:  ${answer.roleDepartment}`);
       // ORIG const queryDecode = "SELECT DISTINCT(d.id) FROM department d JOIN role r ON d.id = r.department_id WHERE UPPER(d.name) = UPPER(?);"
       const queryDecode = "SELECT d.id FROM department d JOIN department i ON d.id = i.id ORDER BY d.id;"
-      /*
-      connection.query(queryDecode, [answer.roleDepartment], (err, resDeco) => {
-        if (err) throw err;
-        console.log(`--> INPUT FROM USER - DECODED department:  `, resDeco[0]);
-        console.log(`--> INPUT FROM USER - DECODED department index 'id':  `, resDeco[0].id);
-        const roleDepartmentDecoded = resDeco[0].id;
-        console.log(`--> 172 | INPUT FROM USER - DECODED department index 'id' as variable (roleDepartmentDecoded):  `, roleDepartmentDecoded);
-      });
-      console.log(`--> 175 | (from INSERT query) INPUT FROM USER - DECODED department:  `, roleDepartmentDecoded);
-      const queryInsert = "INSERT INTO role VALUES(default, ?, ?, ?);";
-      connection.query(
-        /*
-        queryInsert,
-        [
-          {
-            title: answer.roleName
-          },
-          {
-            salary: answer.roleSalary
-          },
-          {
-            // department_id: answer.roleDepartment
-            department_id: roleDepartmentDecoded
-          }
-        ],
-        */
-       /*
-        queryInsert, [answer.roleName, answer.RoleSalary, roleDepartmentDecoded],
-        (err, res) => {
-        if (err) throw err;
-        console.log(`\nNew ROLE created successfully!\n`)
-      });
-      */
+     // TO DO:  flatten the following nested callbacks (no longer needed)
       connection.query(queryDecode, [answer.roleDepartment], (err, resDeco) => {
         if (err) throw err;
         const queryInsert = "INSERT INTO role VALUES(default, ?, ?, ?);";
@@ -215,17 +180,6 @@ const addNewRole = () => {
           });
         });
       });
-      
-      /*
-      // DISPLAY NEW ENTRY IN TABLE
-      const querySelectAll = "SELECT r.title AS 'ROLE TITLE', r.salary AS 'SALARY', d.name AS 'DEPARTMENT' FROM role r JOIN department d ON r.department_id = d.id ORDER BY r.id DESC LIMIT 1"
-      connection.query(querySelectAll, (err, res) => {
-        if (err) throw err;
-        console.table(res);
-        actionSelect();
-      });
-      */
-     //actionSelect();
     })
   })
 };
