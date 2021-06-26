@@ -115,8 +115,8 @@ const addNewDept = () => {
 };
 
 const addNewRole = () => {
-  connection.query(`SELECT DISTINCT(d.name) FROM department d JOIN role r ON d.id = r.department_id;`, (err, res) => {
-  // connection.query(`SELECT DISTINCT(d.name) FROM department d;`, (err, res) => {
+  // ORIG connection.query(`SELECT DISTINCT(d.name) FROM department d JOIN role r ON d.id = r.department_id;`, (err, res) => {
+  connection.query(`SELECT d.name FROM department d ORDER BY d.id`, (err, res) => {
     if (err) throw err;
     inquirer
       .prompt([
@@ -165,7 +165,8 @@ const addNewRole = () => {
       console.log(`--> INPUT FROM USER - title:  ${answer.roleName}`);
       console.log(`--> INPUT FROM USER - salary:  ${answer.roleSalary}`);
       console.log(`--> INPUT FROM USER - department:  ${answer.roleDepartment}`);
-      const queryDecode = "SELECT DISTINCT(d.id) FROM department d JOIN role r ON d.id = r.department_id WHERE UPPER(d.name) = UPPER(?);"
+      // ORIG const queryDecode = "SELECT DISTINCT(d.id) FROM department d JOIN role r ON d.id = r.department_id WHERE UPPER(d.name) = UPPER(?);"
+      const queryDecode = "SELECT d.id FROM department d JOIN department i ON d.id = i.id ORDER BY d.id;"
       /*
       connection.query(queryDecode, [answer.roleDepartment], (err, resDeco) => {
         if (err) throw err;
