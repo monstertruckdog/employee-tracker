@@ -81,7 +81,7 @@ const exit = () => {
 };
 
 const addNewEmployee = () => {
-    // ORIG connection.query(`SELECT DISTINCT(d.name) FROM department d JOIN role r ON d.id = r.department_id;`, (err, res) => {
+    let employeeNames = [];
     const queryRoleTitleList = `SELECT DISTINCT(title)
                                 FROM role
                                 ORDER BY title`
@@ -95,10 +95,6 @@ const addNewEmployee = () => {
                                 ON r.id = m.role_id
                               ORDER BY m.last_name;`
 
-    //const displayRolesManagers = () => {
-        /*
-        connection.query(queryRoleTitleList, (err, resA) => {
-            if (err) throw err;*/
     inquirer
     .prompt([
         {
@@ -128,12 +124,13 @@ const addNewEmployee = () => {
                 exit();
             }
             console.log('NO DUPLICATES FOUND')
+            employeeNames.push(answer.employeeFirstName, answer.employeeLastName)
             //.then(() => {
             let managerRes;
             connection.query(queryManagerList, (err, res) => {
               if (err) throw err;
                 managerRes = res;
-              })
+            })
             connection.query(queryRoleTitleList, (err, res) => {
               if (err) throw err;
               inquirer
@@ -165,75 +162,63 @@ const addNewEmployee = () => {
                   }
                 }
               ])
-            })
-            //.then(() => {
-              // connection.query(queryManagerList, (err, res) => {
-              // if (err) throw err;
-              // })
-              // inquirer
-              // .prompt([
-                /*
-                {
-                  name: 'employeeManagerSelection',
-                  type: 'rawlist',
-                  message: 'Select an existing manager assigned to new employee',
-                  choices() {
-                    const employeeManagerChoices = [];
-                    res.forEach(({ full_name_title }) => {
-                      employeeManagerChoices.push(full_name_title);
+              .then((answer) => {
+                console.log(`--> INPUT FROM USER - first_name:  ${employeeNames[0]}`);
+                console.log(`--> INPUT FROM USER - last_name:  ${employeeNames[1]}`);
+                console.log(`--> INPUT FROM USER - department:  ${answer.employeeRole}`);
+                console.log(`--> INPUT FROM USER - department:  ${answer.employeeManagerSelection}`);
+                // const queryDecodeRole = `SELECT id
+                //                          FROM role
+                //                          WHERE '?' = (SELECT DISTINCT(title)
+                //                                     FROM role)
+                //                          ORDER BY id ASC`
+                const queryDecodeRole = `SELECT f.id
+                                        FROM role f
+                                        WHERE f.title = ?`
+                const queryDecodeManager = `SELECT deco.id
+                                            FROM employee deco
+                                            JOIN role rdeco
+                                              ON deco.role_id = rdeco.id
+                                            WHERE ? = CONCAT(deco.first_name, ' ', deco.last_name, ' (', rdeco.title, ')')`
+                // OLD const queryDecodeRole = "SELECT d.id FROM department d JOIN department i ON d.id = i.id ORDER BY d.id;"
+                connection.query(queryDecodeRole, [answer.employeeRole], (err, resDecoRole) => {
+                  if (err) throw err;
+                  console.log(`--> queryDecodeRole Results:  ${resDecoRole[0].id}`)
+                  connection.query(queryDecodeManager, [answer.employeeManagerSelection], (err, resDecoMgr) => {
+                    if (err) throw err;
+                    console.log(`--> queryDecodeManager Results:  ${resDecoMgr[0].id}`);
+                    // INSERTION
+                    const queryInsertEmployee = `INSERT INTO employee
+                                                VALUES(default, ?, ?, ?, ?)`
+                    connection.query(queryInsertEmployee, [employeeNames[0], employeeNames[1], resDecoRole[0].id, resDecoMgr[0].id], (err, res) => {
+                      if (err) throw err;
+                      console.log(`\nNew EMPLOYEE created successfully\n`)
                     })
-                    employeeManagerChoices.push('No assigned manager');
-                                    
-                    return employeeManagerChoices
-                  }
-                }
-                */
-              //])
-            //   .then((answer) => {
-            //     console.log(`--> employeeManagerChoices:  ${employeeManagerChoices}`);
-            //     if (answer.employeeManagerSelection === 'No assigned manager') {
-            //       console.log('--> EMPLOYEE MANAGER WILL NOT BE ASSIGNED.  TO BE CONTINUED')
-            //     } else {
-            //       console.log('--> Future code to go here');
-            //       exit();
-            //     }
-            // })
-              //})
+                    // DISPLAY NEW ENTRY IN TABLE
+                    const querySelectAllEmployee = `SELECT
+                                                  e.id AS "ID",
+                                                  CONCAT(e.first_name, ' ', e.last_name) AS "Employee Name",
+                                                  e.role_id AS "Role ID",
+                                                  r.title AS "Role Desc",
+                                                  IFNULL(e.manager_id, 'NA') AS "Manager ID",
+                                                  IFNULL(CONCAT(m.first_name, ' ', m.last_name), '(No assigned Manager)') AS "Manager Desc"
+                                                FROM employee e
+                                                JOIN role r
+                                                  ON e.role_id = r.id
+                                                LEFT JOIN employee m
+                                                  ON e.manager_id = m.id
+                                                ORDER BY id DESC LIMIT 1;`
+                    connection.query(querySelectAllEmployee, (err, res) => {
+                      if (err) throw err;
+                      console.table(res);
+                      actionSelect();
+                    })
+                })
+                
+                
+                })
+              })
             })
-          }
-        );
-        //})
-        
+          })
+    });
 };
-
-/*
-// CHECK FOR DUPLICATES - employee first and last name
-        console.log(`--> Salary value is valid ('true') or invalid ('false'):  ${/\d{0,10}\.\d{2}/g.test(answer.roleSalary)}`);
-        const queryCheckExist = "SELECT title FROM role WHERE UPPER(title) = ?"
-        connection.query(queryCheckExist, [answer.roleName.toUpperCase()], (err, res) => {
-          if (err) throw err;
-          if (res.length > 0 && (res[0].title.toUpperCase() === answer.roleName.toUpperCase())) {
-            console.log(`Role title "${answer.roleName}" already exists.  Please try again`)
-            exit();
-          }
-        });
-        // INSERTION
-        console.log(`--> INPUT FROM USER - title:  ${answer.roleName}`);
-        console.log(`--> INPUT FROM USER - salary:  ${answer.roleSalary}`);
-        console.log(`--> INPUT FROM USER - department:  ${answer.roleDepartment}`);
-        // ORIG const queryDecode = "SELECT DISTINCT(d.id) FROM department d JOIN role r ON d.id = r.department_id WHERE UPPER(d.name) = UPPER(?);"
-        const queryDecode = "SELECT d.id FROM department d JOIN department i ON d.id = i.id ORDER BY d.id;"
-       // TO DO:  flatten the following nested callbacks (no longer needed)
-        connection.query(queryDecode, [answer.roleDepartment], (err, resDeco) => {
-          if (err) throw err;
-          const queryInsert = "INSERT INTO role VALUES(default, ?, ?, ?);";
-          connection.query(queryInsert, [answer.roleName, answer.roleSalary, resDeco[0].id], (err, res) => {
-            if (err) throw err;
-            console.log(`\nNew ROLE created successfully!\n`)
-            // DISPLAY NEW ENTRY IN TABLE
-            const querySelectAll = "SELECT r.title AS 'ROLE TITLE', r.salary AS 'SALARY', d.name AS 'DEPARTMENT' FROM role r JOIN department d ON r.department_id = d.id ORDER BY r.id DESC LIMIT 1"
-            connection.query(querySelectAll, (err, res) => {
-              if (err) throw err;
-              console.table(res);
-              actionSelect();
-*/

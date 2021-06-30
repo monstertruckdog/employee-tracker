@@ -163,7 +163,8 @@ const addNewRole = () => {
       console.log(`--> INPUT FROM USER - salary:  ${answer.roleSalary}`);
       console.log(`--> INPUT FROM USER - department:  ${answer.roleDepartment}`);
       // ORIG const queryDecode = "SELECT DISTINCT(d.id) FROM department d JOIN role r ON d.id = r.department_id WHERE UPPER(d.name) = UPPER(?);"
-      const queryDecode = "SELECT d.id FROM department d JOIN department i ON d.id = i.id ORDER BY d.id;"
+      //const queryDecode = "SELECT d.id FROM department d JOIN department i ON d.id = i.id ORDER BY d.id;"
+      const queryDecode = `SELECT d.id FROM department d WHERE ? = title`
      // TO DO:  flatten the following nested callbacks (no longer needed)
       connection.query(queryDecode, [answer.roleDepartment], (err, resDeco) => {
         if (err) throw err;
@@ -187,43 +188,58 @@ const addNewRole = () => {
 // first_name, last_name, role_id, manager_id
 const addNewEmployee = () => {
   // ORIG connection.query(`SELECT DISTINCT(d.name) FROM department d JOIN role r ON d.id = r.department_id;`, (err, res) => {
-  const queryRoleTitleList = 'SELECT DISTINCT(title) FROM role ORDER BY title'
-  const queryManagerList = 
-  connection.query(`SELECT d.name FROM department d ORDER BY d.id`, (err, res) => {
+  const queryRoleTitleList = `SELECT DISTINCT(title)
+                              FROM role
+                              ORDER BY title`
+  const queryManagerList = `SELECT CONCAT(m.first_name, ' ', m.last_name) AS "full_name"
+                            FROM employee e
+                            JOIN employe m
+                              ON e.manager_id = m.id
+                            ORDER BY m.last_name`
+  connection.query(queryRoleTitleList, (err, resRoles) => {
     if (err) throw err;
-    inquirer
+    connection.query(queryManagerList, (err, resManagers) => {
+      if (err) throw err;
+      inquirer
       .prompt([
         {
-          name: 'roleName',
+          name: 'employeeFirstName',
           type: 'input',
-          message: 'Title of new role',
+          message: 'First name of new Employee',
         },
         {
-          name: 'roleSalary',
+          name: 'employeeLasttName',
           type: 'input',
-          message: 'Salary for new role ($ 0.00 USD)',
-          validate(value) {
-            const checkCurrencyFormat = value.match(/\d{0,10}\.\d{2}/g); // TO DO:  improve regex to better accomodate currency foramt
-            if (checkCurrencyFormat) {
-              return true;
-            }
+          message: 'Last name of new Employee',
+        },
+        {
+          name: 'employeeRole',
+          type: 'rawlist',
+          message: 'Job Role for new Employee',
+          choices() {
+            const employeeRoleOptions = [];
+            resRoles.forEach(({ title }) => {
+              employeeRoleOptions.push(title);
+            });
+            return employeeRoleOptions
           }
         },
         {
-          name: 'roleDepartment',
+          name: 'employeeManagerExisting',
           type: 'rawlist',
-          message: 'Select the department associated with the new role',
+          message: 'Select an existing manager assigned to new employee',
           choices() {
-            const roleDeptChoices = [];
-            res.forEach(({ name }) => {
-              roleDeptChoices.push(name);
+            const employeeManagerChoices = [];
+            resManagers.forEach(({ full_name }) => {
+              employeeManagerChoices.push(1);
+              //`SELECT CONCAT(m.first_name, ' ', m.last_name)
             });
-            return roleDeptChoices
+            return employeeManagerChoices
           }
         }
       ])
       .then((answer) => {
-      // CHECK FOR DUPLICATES - role.title
+      // CHECK FOR DUPLICATES - employee first and last name
       console.log(`--> Salary value is valid ('true') or invalid ('false'):  ${/\d{0,10}\.\d{2}/g.test(answer.roleSalary)}`);
       const queryCheckExist = "SELECT title FROM role WHERE UPPER(title) = ?"
       connection.query(queryCheckExist, [answer.roleName.toUpperCase()], (err, res) => {
@@ -255,14 +271,15 @@ const addNewEmployee = () => {
           });
         });
       });
+      })
     })
-  })
-};
+  });
+}
 
 const viewEmployees = () => {
   //const query = 'SELECT * FROM employee;';
   const queryEmployeeAllSelect = `SELECT
-	                                  e.id,
+	                                  e.id AS "ID",
                                     CONCAT(e.first_name, ' ', e.last_name) AS "Employee Name",
                                     e.role_id AS "Role ID",
                                     r.title AS "Role Desc",
@@ -272,7 +289,8 @@ const viewEmployees = () => {
                                   JOIN role r
                                     ON e.role_id = r.id
                                   LEFT JOIN employee m
-                                    ON e.manager_id = m.id;`
+                                    ON e.manager_id = m.id
+                                  ORDER BY id;`
   connection.query(queryEmployeeAllSelect, (err, res) => {
     console.log('');
     console.table(res);
