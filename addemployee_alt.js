@@ -2,7 +2,6 @@ require('dotenv').config()
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
-const firstAndLastNames = [];
 
 const connection = mysql.createConnection({
   database: process.env.DB_NAME,
@@ -130,6 +129,11 @@ const addNewEmployee = () => {
             }
             console.log('NO DUPLICATES FOUND')
             //.then(() => {
+            let managerRes;
+            connection.query(queryManagerList, (err, res) => {
+              if (err) throw err;
+                managerRes = res;
+              })
             connection.query(queryRoleTitleList, (err, res) => {
               if (err) throw err;
               inquirer
@@ -145,14 +149,30 @@ const addNewEmployee = () => {
                     });
                     return employeeRoleOptions
                   }
+                },
+                {
+                  name: 'employeeManagerSelection',
+                  type: 'rawlist',
+                  message: 'Select an existing manager assigned to new employee',
+                  choices() {
+                    const employeeManagerChoices = [];
+                    managerRes.forEach(({ full_name_title }) => {
+                      employeeManagerChoices.push(full_name_title);
+                    })
+                    employeeManagerChoices.push('No assigned manager');
+                                    
+                    return employeeManagerChoices
+                  }
                 }
               ])
             })
             //.then(() => {
-              connection.query(queryManagerList, (err, res) => {
-              if (err) throw err;
-              inquirer
-              .prompt([
+              // connection.query(queryManagerList, (err, res) => {
+              // if (err) throw err;
+              // })
+              // inquirer
+              // .prompt([
+                /*
                 {
                   name: 'employeeManagerSelection',
                   type: 'rawlist',
@@ -167,17 +187,18 @@ const addNewEmployee = () => {
                     return employeeManagerChoices
                   }
                 }
-              ])
-              .then((answer) => {
-                console.log(`--> DID THIS VALUE MAKE IT? - employeeManagerChoices:  ${employeeManagerChoices}`);
-                if (answer.employeeManagerSelection === 'No assigned manager') {
-                  console.log('--> EMPLOYEE MANAGER WILL NOT BE ASSIGNED.  TO BE CONTINUED')
-                } else {
-                  console.log('--> Future code to go here');
-                  exit();
-                }
-            })
-              })
+                */
+              //])
+            //   .then((answer) => {
+            //     console.log(`--> employeeManagerChoices:  ${employeeManagerChoices}`);
+            //     if (answer.employeeManagerSelection === 'No assigned manager') {
+            //       console.log('--> EMPLOYEE MANAGER WILL NOT BE ASSIGNED.  TO BE CONTINUED')
+            //     } else {
+            //       console.log('--> Future code to go here');
+            //       exit();
+            //     }
+            // })
+              //})
             })
           }
         );
