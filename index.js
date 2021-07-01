@@ -362,7 +362,7 @@ const viewEmployees = () => {
   })
 };
 
-
+let employeeName;
 
 const updateEmployeeRole = () => {
   const queryEmployeeNameList = `SELECT
@@ -395,15 +395,17 @@ const updateEmployeeRole = () => {
       ])
       .then((answer) => {
         console.log(`--> ANSWER RESPONSE:  ${answer.updateEmpRolEmpName}`)
+        employeeName = answer.updateEmpRolEmpName
+        console.log(`--> ANSWER RESPONSE IN VARIABLE:  ${employeeName}`)
         const querySelectedEmployeeRole =   `SELECT
                                               r.title AS 'role_title'
                                             FROM employee e
                                             JOIN role r
                                               ON e.role_id = r.id
                                             WHERE CONCAT(e.first_name, ' ', e.last_name) = ?`
-        connection.query(querySelectedEmployeeRole, [answer.updateEmpRolEmpName], (err, res) => {
+        connection.query(querySelectedEmployeeRole, [answer.updateEmpRolEmpName], (err, resRole) => {
           if (err) throw err;
-          console.log(`EMPLOYEE\'S CURRENT ROLE:  `, res[0].role_title)
+          console.log(`EMPLOYEE\'S CURRENT ROLE:  `, resRole[0].role_title)
         });
         connection.query(queryRoleList, (err, res) => {
           if (err) throw err;
@@ -425,9 +427,23 @@ const updateEmployeeRole = () => {
           ])
           .then((answer) => {
             console.log(`--> Update here`)
-            const queryUpdateEmployeeRole = `UPDATE employee
-                                            SET role_id = ?
+
+            const queryUpdateEmployeeRole = `UPDATE employee e
+                                            JOIN role r
+                                              ON e.role_id = r.id
+                                            SET e.role_id = (SELECT *
+                                                            FROM (SELECT d.id
+                                                                  FROM role d
+                                                                  WHERE ? = d.title) x)
                                             WHERE ? = CONCAT(e.first_name, ' ', e.last_name)`
+            console.log(`--> FIRST QUERY ?:  `, answer.updateEmpRolRoleList)
+            console.log(`--> SECOND QUERY ?:  `, answer.updateEmpRolEmpName)
+            console.log(`--> SECOND QUERY DIFFERENT SOURCE ?:  ${employeeName}`)
+            // connection.query(queryUpdateEmployeeRole, [answer.updateEmpRolRoleList, answer.updateEmpRolEmpName], (err, res) => {
+              connection.query(queryUpdateEmployeeRole, [answer.updateEmpRolRoleList, employeeName], (err, res) => {
+              if (err) throw err;
+              console.log(`EMPLOYEE\'S ROLE HAS BEEN UPDATED`)
+            })
           })
         })
       })
