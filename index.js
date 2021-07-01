@@ -362,7 +362,7 @@ const viewEmployees = () => {
   })
 };
 
-let employeeName;
+let employeeNameSelection;
 
 const updateEmployeeRole = () => {
   const queryEmployeeNameList = `SELECT
@@ -395,8 +395,8 @@ const updateEmployeeRole = () => {
       ])
       .then((answer) => {
         console.log(`--> ANSWER RESPONSE:  ${answer.updateEmpRolEmpName}`)
-        employeeName = answer.updateEmpRolEmpName
-        console.log(`--> ANSWER RESPONSE IN VARIABLE:  ${employeeName}`)
+        employeeNameSelection = answer.updateEmpRolEmpName
+        console.log(`--> ANSWER RESPONSE IN VARIABLE:  ${employeeNameSelection}`)
         const querySelectedEmployeeRole =   `SELECT
                                               r.title AS 'role_title'
                                             FROM employee e
@@ -438,11 +438,12 @@ const updateEmployeeRole = () => {
                                             WHERE ? = CONCAT(e.first_name, ' ', e.last_name)`
             console.log(`--> FIRST QUERY ?:  `, answer.updateEmpRolRoleList)
             console.log(`--> SECOND QUERY ?:  `, answer.updateEmpRolEmpName)
-            console.log(`--> SECOND QUERY DIFFERENT SOURCE ?:  ${employeeName}`)
+            console.log(`--> SECOND QUERY DIFFERENT SOURCE ?:  ${employeeNameSelection}`)
             // connection.query(queryUpdateEmployeeRole, [answer.updateEmpRolRoleList, answer.updateEmpRolEmpName], (err, res) => {
-              connection.query(queryUpdateEmployeeRole, [answer.updateEmpRolRoleList, employeeName], (err, res) => {
+              connection.query(queryUpdateEmployeeRole, [answer.updateEmpRolRoleList, employeeNameSelection], (err, res) => {
               if (err) throw err;
               console.log(`EMPLOYEE\'S ROLE HAS BEEN UPDATED`)
+              employeeUpdateDisplay(employeeNameSelection);
             })
           })
         })
@@ -473,6 +474,27 @@ const employeeAddDisplay = () => {
                                   ORDER BY id DESC LIMIT 1;`
   connection.query(querySelectAllEmployee, (err, res) => {
   if (err) throw err;
+    console.table(res);
+    actionSelect();
+  })
+};
+
+const employeeUpdateDisplay = (employeeNameSelection) => {
+  const querySelectUpdatedEmployee = `SELECT
+                                        e.id AS "ID",
+                                        CONCAT(e.first_name, ' ', e.last_name) AS "Employee Name",
+                                        e.role_id AS "Role ID",
+                                        r.title AS "Role Desc",
+                                        IFNULL(e.manager_id, 'NA') AS "Manager ID",
+                                        IFNULL(CONCAT(m.first_name, ' ', m.last_name), '(No assigned Manager)') AS "Manager Desc"
+                                      FROM employee e
+                                      JOIN role r
+                                        ON e.role_id = r.id
+                                      LEFT JOIN employee m
+                                        ON e.manager_id = m.id
+                                      WHERE CONCAT(e.first_name, ' ', e.last_name) = ?`
+  connection.query(querySelectUpdatedEmployee, [employeeNameSelection], (err, res) => {
+    if (err) throw err;
     console.table(res);
     actionSelect();
   })
