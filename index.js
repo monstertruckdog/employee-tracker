@@ -2,7 +2,6 @@ require('dotenv').config()
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
-let roleDepartmentDecoded;
 
 const connection = mysql.createConnection({
   database: process.env.DB_NAME,
@@ -31,7 +30,7 @@ const actionSelect = () => {
         'View   | All Departments', // Done
         'View   | All Roles', // Done
         'View   | All Employees', // Done
-        'Update | Employee Roles',
+        'Update | Employee\'s Role',
         'Exit' // Done
       ],
     })
@@ -61,8 +60,8 @@ const actionSelect = () => {
           viewEmployees();
           break;
 
-        case 'Update | Roles':
-          updateRoles();
+        case 'Update | Employee\'s Role':
+          updateEmployeeRole();
           break;
 
         case 'Exit':
@@ -227,7 +226,6 @@ const addNewEmployee = () => {
           }
           console.log('NO DUPLICATES FOUND')
           employeeNames.push(answer.employeeFirstName, answer.employeeLastName)
-          //.then(() => {
           let managerRes;
           connection.query(queryManagerList, (err, res) => {
             if (err) throw err;
@@ -299,7 +297,7 @@ const addNewEmployee = () => {
                     })
                   }
                   employeeAddDisplay();
-                  actionSelect();
+                  //actionSelect();
                 })
               })
             })
@@ -315,6 +313,7 @@ const viewDepartments = () => {
                                 FROM department
                                 ORDER BY id ASC`
   connection.query(queryViewDepartments, (err, res) => {
+    if (err) throw err;
     console.log('');
     console.table(res);
     actionSelect();
@@ -333,6 +332,7 @@ const viewRoles = () => {
                             ON r.department_id = d.id
                           ORDER BY r.id ASC;`
   connection.query(queryViewRoles, (err, res) => {
+    if (err) throw err;
     console.log('');
     console.table(res);
     actionSelect();
@@ -355,11 +355,85 @@ const viewEmployees = () => {
                                     ON e.manager_id = m.id
                                   ORDER BY id;`
   connection.query(queryEmployeeAllSelect, (err, res) => {
+    if (err) throw err;
     console.log('');
     console.table(res);
     actionSelect();
   })
 };
+
+
+
+const updateEmployeeRole = () => {
+  const queryEmployeeNameList = `SELECT
+                                  CONCAT(e.first_name, ' ', e.last_name) AS 'full_name'
+                                FROM employee e
+                                ORDER BY e.last_name, e.first_name ASC`
+  const queryRoleList = `SELECT
+                          DISTINCT(r.title)
+                        FROM role r
+                        ORDER BY r.title ASC`
+  let queryEmpList;
+  connection.query(queryEmployeeNameList, (err, res) => {
+    if (err) throw err;
+      queryEmpList = res;
+  
+    inquirer
+      .prompt([
+        {
+          name: 'updateEmpRolEmpName',
+          type: 'rawlist',
+          message: 'Select Employee name',
+          choices() {
+            const empNameList = [];
+            queryEmpList.forEach(({ full_name }) => {
+              empNameList.push(full_name);
+            });
+            return empNameList
+          }
+        },
+      ])
+      .then((answer) => {
+        console.log(`--> ANSWER RESPONSE:  ${answer.updateEmpRolEmpName}`)
+        const querySelectedEmployeeRole =   `SELECT
+                                              r.title AS 'role_title'
+                                            FROM employee e
+                                            JOIN role r
+                                              ON e.role_id = r.id
+                                            WHERE CONCAT(e.first_name, ' ', e.last_name) = ?`
+        connection.query(querySelectedEmployeeRole, [answer.updateEmpRolEmpName], (err, res) => {
+          if (err) throw err;
+          console.log(`EMPLOYEE\'S CURRENT ROLE:  `, res[0].role_title)
+        });
+        connection.query(queryRoleList, (err, res) => {
+          if (err) throw err;
+          console.log(`--> RESPONSE (raw):  `, res)
+          inquirer
+            .prompt([
+              {
+                name: 'updateEmpRolRoleList',
+                type: 'rawlist',
+                message: 'Select the new ROLE for the EMPLOYEE',
+                choices() {
+                  const roleDeptChoices = [];
+                  res.forEach(({ title }) => {
+                    roleDeptChoices.push(title);
+                });
+                return roleDeptChoices
+              }
+            }
+          ])
+          .then((answer) => {
+            console.log(`--> Update here`)
+            const queryUpdateEmployeeRole = `UPDATE employee
+                                            SET role_id = ?
+                                            WHERE ? = CONCAT(e.first_name, ' ', e.last_name)`
+          })
+        })
+      })
+    })
+  }
+    
 
 // Accesory functions
 const exit = () => {
@@ -384,5 +458,6 @@ const employeeAddDisplay = () => {
   connection.query(querySelectAllEmployee, (err, res) => {
   if (err) throw err;
     console.table(res);
+    actionSelect();
   })
 };
