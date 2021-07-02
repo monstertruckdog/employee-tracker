@@ -2,6 +2,7 @@ require('dotenv').config()
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
+let employeeNameSelection;
 
 const connection = mysql.createConnection({
   database: process.env.DB_NAME,
@@ -24,14 +25,14 @@ const actionSelect = () => {
       type: 'rawlist',
       message: 'What would you like to do?',
       choices: [
-        'Add    | New Department', // Done
-        'Add    | New Role', // Done
-        'Add    | New Employee', // Done
-        'View   | All Departments', // Done
-        'View   | All Roles', // Done
-        'View   | All Employees', // Done
+        'Add    | New Department',
+        'Add    | New Role',
+        'Add    | New Employee',
+        'View   | All Departments', 
+        'View   | All Roles',
+        'View   | All Employees',
         'Update | Employee\'s Role',
-        'Exit' // Done
+        'Exit'
       ],
     })
     .then((answer) => {
@@ -92,13 +93,13 @@ const addNewDept = () => {
           exit();
         }
       });
-      // INSERTION
+      // TABLE RECORD INSERTION
       const queryInsert = "INSERT INTO department VALUES(default, ?);";
       connection.query(queryInsert, [answer.deptName], (err, res) => {
         if (err) throw err;
         console.log(`\nNew DEPARTMENT created successfully!\n`)
       });
-      // DISPLAY NEW ENTRY IN TABLE
+      // DISPLAY NEW RECORD IN TABLE
       const querySelectAll = "SELECT id AS 'DEPT ID', name AS 'DEPT NAME' FROM department ORDER BY id DESC LIMIT 1"
       connection.query(querySelectAll, (err, res) => {
         if (err) throw err;
@@ -109,7 +110,6 @@ const addNewDept = () => {
 };
 
 const addNewRole = () => {
-  // ORIG connection.query(`SELECT DISTINCT(d.name) FROM department d JOIN role r ON d.id = r.department_id;`, (err, res) => {
   connection.query(`SELECT d.name FROM department d ORDER BY d.id`, (err, res) => {
     if (err) throw err;
     inquirer
@@ -154,21 +154,14 @@ const addNewRole = () => {
           exit();
         }
       });
-      // INSERTION
-      console.log(`--> INPUT FROM USER - title:  ${answer.roleName}`);
-      console.log(`--> INPUT FROM USER - salary:  ${answer.roleSalary}`);
-      console.log(`--> INPUT FROM USER - department:  ${answer.roleDepartment}`);
-      // ORIG const queryDecode = "SELECT DISTINCT(d.id) FROM department d JOIN role r ON d.id = r.department_id WHERE UPPER(d.name) = UPPER(?);"
-      //const queryDecode = "SELECT d.id FROM department d JOIN department i ON d.id = i.id ORDER BY d.id;"
       const queryDecode = `SELECT d.id FROM department d WHERE ? = d.name`
-     // TO DO:  flatten the following nested callbacks (no longer needed)
       connection.query(queryDecode, [answer.roleDepartment], (err, resDeco) => {
         if (err) throw err;
         const queryInsert = "INSERT INTO role VALUES(default, ?, ?, ?);";
         connection.query(queryInsert, [answer.roleName, answer.roleSalary, resDeco[0].id], (err, res) => {
           if (err) throw err;
           console.log(`\nNew ROLE created successfully!\n`)
-          // DISPLAY NEW ENTRY IN TABLE
+          // DISPLAY NEW TABLE RECORD IN TABLE
           const querySelectAll = "SELECT r.title AS 'ROLE TITLE', r.salary AS 'SALARY', d.name AS 'DEPARTMENT' FROM role r JOIN department d ON r.department_id = d.id ORDER BY r.id DESC LIMIT 1"
           connection.query(querySelectAll, (err, res) => {
             if (err) throw err;
@@ -214,12 +207,9 @@ const addNewEmployee = () => {
                                FROM employee
                                WHERE UPPER(first_name) = ?
                                AND UPPER(last_name) = ?`
-      console.log(`--> ANSWERS:  ${answer.employeeFirstName}`);
-      console.log(`--> ANSWERS:  ${answer.employeeLastName}`)
+      // CHECK FOR DUPLICATES:  employee.first_name, employee.last_name
       connection.query(queryCheckExist, [answer.employeeFirstName.toUpperCase(), answer.employeeLastName.toUpperCase()], (err, res) => {
           if (err) throw err;
-          console.log(`--> DUPLICATE CHECK RESPONSE:  `, res)
-          console.log(`--> DUPLICATE CHECK RESPONSE - INDEX[0]:  ${res[0]}`);
           if (res.length > 0 && (res[0].first_name.toUpperCase() === answer.employeeFirstName.toUpperCase()) && (res[0].last_name.toUpperCase() === answer.employeeLastName.toUpperCase())) {
               console.log(`Employee name "${answer.employeeFirstName} ${answer.employeeLastName}" already exists.  Please try again`)
               exit();
@@ -263,11 +253,6 @@ const addNewEmployee = () => {
               }
             ])
             .then((answer) => {
-              console.log(`--> INPUT FROM USER - first_name:  ${employeeNames[0]}`);
-              console.log(`--> INPUT FROM USER - last_name:  ${employeeNames[1]}`);
-              console.log(`--> INPUT FROM USER - department:  ${answer.employeeRole}`);
-              console.log(`--> INPUT FROM USER - department:  ${answer.employeeManagerSelection}`);
-
               const queryDecodeRole = `SELECT f.id
                                       FROM role f
                                       WHERE f.title = ?`
@@ -278,14 +263,11 @@ const addNewEmployee = () => {
                                           WHERE ? = CONCAT(deco.first_name, ' ', deco.last_name, ' (', rdeco.title, ')')`
               connection.query(queryDecodeRole, [answer.employeeRole], (err, resDecoRole) => {
                 if (err) throw err;
-                console.log(`--> queryDecodeRole Results:  ${resDecoRole[0].id}`)
                 connection.query(queryDecodeManager, [answer.employeeManagerSelection], (err, resDecoMgr) => {
                   if (err) throw err;
-                  //console.log(`--> queryDecodeManager Results:  ${resDecoMgr[0].id}`);
-                  // INSERTION
+                  // TABLE RECORD INSERTION
                   const queryInsertEmployee = `INSERT INTO employee
-                                              VALUES(default, ?, ?, ?, ?)`
-                                              
+                                              VALUES(default, ?, ?, ?, ?)`                        
                   if (answer.employeeManagerSelection === 'No assigned manager') {
                     connection.query(queryInsertEmployee, [employeeNames[0], employeeNames[1], resDecoRole[0].id, null], (err, res) => {
                       if (err) throw err;
@@ -296,8 +278,8 @@ const addNewEmployee = () => {
                         console.log(`\nNew EMPLOYEE created successfully\n`)
                     })
                   }
+                  // DISPLAY NEW TABLE RECORDS AND RESTART MAIN MENU OPTIONS
                   employeeAddDisplay();
-                  //actionSelect();
                 })
               })
             })
@@ -340,7 +322,6 @@ const viewRoles = () => {
 }
 
 const viewEmployees = () => {
-  //const query = 'SELECT * FROM employee;';
   const queryEmployeeAllSelect = `SELECT
 	                                  e.id AS "ID",
                                     CONCAT(e.first_name, ' ', e.last_name) AS "Employee Name",
@@ -361,8 +342,6 @@ const viewEmployees = () => {
     actionSelect();
   })
 };
-
-let employeeNameSelection;
 
 const updateEmployeeRole = () => {
   const queryEmployeeNameList = `SELECT
@@ -394,9 +373,7 @@ const updateEmployeeRole = () => {
         },
       ])
       .then((answer) => {
-        console.log(`--> ANSWER RESPONSE:  ${answer.updateEmpRolEmpName}`)
         employeeNameSelection = answer.updateEmpRolEmpName
-        console.log(`--> ANSWER RESPONSE IN VARIABLE:  ${employeeNameSelection}`)
         const querySelectedEmployeeRole =   `SELECT
                                               r.title AS 'role_title'
                                             FROM employee e
@@ -409,7 +386,6 @@ const updateEmployeeRole = () => {
         });
         connection.query(queryRoleList, (err, res) => {
           if (err) throw err;
-          console.log(`--> RESPONSE (raw):  `, res)
           inquirer
             .prompt([
               {
@@ -426,8 +402,6 @@ const updateEmployeeRole = () => {
             }
           ])
           .then((answer) => {
-            console.log(`--> Update here`)
-
             const queryUpdateEmployeeRole = `UPDATE employee e
                                             JOIN role r
                                               ON e.role_id = r.id
@@ -436,13 +410,9 @@ const updateEmployeeRole = () => {
                                                                   FROM role d
                                                                   WHERE ? = d.title) x)
                                             WHERE ? = CONCAT(e.first_name, ' ', e.last_name)`
-            console.log(`--> FIRST QUERY ?:  `, answer.updateEmpRolRoleList)
-            console.log(`--> SECOND QUERY ?:  `, answer.updateEmpRolEmpName)
-            console.log(`--> SECOND QUERY DIFFERENT SOURCE ?:  ${employeeNameSelection}`)
-            // connection.query(queryUpdateEmployeeRole, [answer.updateEmpRolRoleList, answer.updateEmpRolEmpName], (err, res) => {
               connection.query(queryUpdateEmployeeRole, [answer.updateEmpRolRoleList, employeeNameSelection], (err, res) => {
               if (err) throw err;
-              console.log(`EMPLOYEE\'S ROLE HAS BEEN UPDATED`)
+              console.log(`EMPLOYEE\'S ROLE HAS BEEN SUCCESSFULLY UPDATED`)
               employeeUpdateDisplay(employeeNameSelection);
             })
           })
