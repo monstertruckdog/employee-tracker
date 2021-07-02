@@ -213,7 +213,6 @@ const addNewEmployee = () => {
               console.log(`Employee name "${answer.employeeFirstName} ${answer.employeeLastName}" already exists.  Please try again`)
               exit();
           }
-          console.log('NO DUPLICATES FOUND')
           employeeNames.push(answer.employeeFirstName, answer.employeeLastName)
           let managerRes;
           connection.query(queryManagerList, (err, res) => {
