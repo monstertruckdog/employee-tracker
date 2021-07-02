@@ -145,7 +145,6 @@ const addNewRole = () => {
       ])
       .then((answer) => {
       // CHECK FOR DUPLICATES - role.title
-      console.log(`--> Salary value is valid ('true') or invalid ('false'):  ${/\d{0,10}\.\d{2}/g.test(answer.roleSalary)}`);
       const queryCheckExist = "SELECT title FROM role WHERE UPPER(title) = ?"
       connection.query(queryCheckExist, [answer.roleName.toUpperCase()], (err, res) => {
         if (err) throw err;
