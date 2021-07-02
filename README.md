@@ -2,17 +2,17 @@
 
 ## Background
 
-To better understand server-to-database concepts, relational database design and functions, and improve experience with previously used tools Inquirer and Node.js, students were asked to demonstrate their proficiency in these areas by creating a database from scratch, designing tables, seeding the tables with data and then writing an interface through the command line to perform CRUD operations on data in the database.
+To better understand server-to-database concepts, relational database design and functions, and gaining further visceral experience with previously used tools Inquirer and Node.js, students were asked to demonstrate their knowledge in these areas by creating a database from scratch, designing tables, seeding the tables with data and then writing an interface through the command line to interface with the data in the database.  The data
 
-Students were asked to create a database using [MySQL](https://www.mysql.com/) to contain data for a hypothetical occupation company with:
+Students were asked to create a database using [MySQL](https://www.mysql.com/) to contain data for a hypothetical company with:
 
 * Departments
 * Occupational job roles
 * Employees
 
-These three tables must be related to each other using Primary and Foreign keys to appropriately handle new record insertions and deletions so that records are not orphaned or compromised.  Data for these tables must also created or "seeded".
+These three tables must be related to each other using Primary and Foreign keys to appropriately handle new record insertions and deletions so that records are not orphaned or compromised.  Data for these tables must also be created or "seeded".
 
-Once the database and data are in place, a command line interface using Node.js and the [Inquirer](https://www.npmjs.com/package/inquirer) npm package must be created to perform the following actions across the three database tables:
+Once the database and data are configured and deployed, a command line interface using Node.js and the [Inquirer](https://www.npmjs.com/package/inquirer) npm package must be created to perform the following CRUD actions across the three database tables:
 
 * Add new department, job role and employee records (`INSERT` statements)
 * Modify job role for a given employee (`UPDATE` statement)
@@ -30,6 +30,7 @@ Once the database and data are in place, a command line interface using Node.js 
 	* `department`
 	* `role`
 	* `employee`
+
 * Schema design:
 	![Database Schema](assets/schema.png)
 
