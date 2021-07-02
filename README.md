@@ -2,7 +2,7 @@
 
 ## Background
 
-To better understand server-to-database concepts, relational database design and functions, and gaining further visceral experience with previously used tools Inquirer and Node.js, students were asked to demonstrate their knowledge in these areas by creating a database from scratch, designing tables, seeding the tables with data and then writing an interface through the command line to interface with the data in the database.  The data
+To better understand server-to-database concepts, relational database design and functions, and improve experience with previously used tools Inquirer and Node.js, students were asked to demonstrate their proficiency in these areas by creating a database from scratch, designing tables, seeding the tables with data and then writing an interface through the command line to perform CRUD operations on data in the database.
 
 Students were asked to create a database using [MySQL](https://www.mysql.com/) to contain data for a hypothetical occupation company with:
 
