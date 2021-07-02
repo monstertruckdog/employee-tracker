@@ -120,15 +120,15 @@ Once the database and data are in place, a command line interface using Node.js 
 
 #### Add new Department and view all Departments
 
-![employee-tracker_department](./assets/employee-tracker_department.mov)
+![employee-tracker_department](./assets/employee-tracker_department.gif)
 
 #### Add new Role and view all Roles
 
-![employee-tracker_role](./assets/employee-tracker_role.mov)
+![employee-tracker_role](./assets/employee-tracker_role.gif)
 
 #### Add new Employee, view all Employees, exit application
 
-![employee-tracker_employee](./assets/employee_tracker_employee.mov)
+![employee-tracker_employee](./assets/employee-tracker_employee.gif)
 
 ## Future Enhancements
 
