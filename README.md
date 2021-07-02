@@ -118,7 +118,17 @@ Once the database and data are in place, a command line interface using Node.js 
 
 ## Usage
 
+#### Add new Department and view all Departments
 
+![employee-tracker_department](./assets/employee-tracker_department.mov)
+
+#### Add new Role and view all Roles
+
+![employee-tracker_role](./assets/employee-tracker_role.mov)
+
+#### Add new Employee, view all Employees, exit application
+
+![employee-tracker_employee](./assets/employee_tracker_employee.mov)
 
 ## Future Enhancements
 
@@ -129,7 +139,7 @@ Once the database and data are in place, a command line interface using Node.js 
 * Add more database functions:  `UPDATE`s for more table columns on more tables, `DELETE`s, etc.
 
 #### Improvements
-* Make code more modular:  separate prompt and SQL logic into different file by action type or database tables used
+* Make code more modular:  separate prompt and SQL logic into different files by action type or database tables used
 * Reduce usage of callbacks
 * Improve consistency of variable names
 

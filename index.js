@@ -240,7 +240,7 @@ const addNewEmployee = () => {
                 type: 'rawlist',
                 message: 'Select an existing manager assigned to new employee',
                 choices() {
-                  const employeeManagerChoices = [];
+                  let employeeManagerChoices = [];
                   managerRes.forEach(({ full_name_title }) => {
                     employeeManagerChoices.push(full_name_title);
                   })
